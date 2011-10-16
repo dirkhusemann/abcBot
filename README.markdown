@@ -45,7 +45,6 @@ source:
 
     input=Z%FCrich+HB&inputRef=Z%FCrich+HB%23008503000&date=Do%2C+13.10.11&time=00%3A00&boardType=arr&REQTrain_name=&advancedProductMode=&GUIREQProduct_0=on&GUIREQProduct_1=on&GUIREQProduct_2=on&GUIREQProduct_3=on&GUIREQProduct_4=on&GUIREQProduct_5=on&GUIREQProduct_6=on&GUIREQProduct_7=on&GUIREQProduct_8=on&start=Suchen
 
-
 boardType can be either
 
 * `dep` — for the departure table, or
