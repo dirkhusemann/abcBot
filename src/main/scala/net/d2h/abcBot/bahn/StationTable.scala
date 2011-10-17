@@ -60,7 +60,8 @@ package net.d2h.abcBot.bahn {
     case class Departure(time: String, trainType: String, train: String, destinationLocation: String, stations: List[ViaStation])
          extends ArrivalDeparture(time, trainType, train, destinationLocation, stations)
 
-    case class StationTable(station: String, date: String) { 
+
+    class StationTable(station: String, date: String) { 
         var arrivals: Map[String, List[Arrival]] = Map()
         var departures: Map[String, List[Departure]] = Map()
 
@@ -73,5 +74,8 @@ package net.d2h.abcBot.bahn {
             departures(departure.time) = departure :: departures.getOrElse(departure.time, Nil)
             this
         }
+    }
+
+    object StationTable { 
     }
 }
