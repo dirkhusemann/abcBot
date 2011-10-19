@@ -41,4 +41,28 @@ package net.d2h.abcBot.bahn {
                 (arr.stations.size mustEqual 2)
         }
     }
+
+    class DepartureSpec extends Specification { def is = 
+
+        "This is a specification to check the Departure class" ^
+                                                               p^
+        "An Departure object should"                           ^
+            "capture departure time information"               ! departure().isCaptured ^
+                                                               end
+
+
+        trait DepartureSample { 
+            val dep = Departure("00:00", "S", "S2", "Pfäffikon SZ", ViaStation("Thalwil", "00:25") :: ViaStation("Horgen", "00:28") :: 
+                                ViaStation("Wädenswil", "00:32") :: Nil)            
+        }
+
+        case class departure() extends DepartureSample { 
+            def isCaptured =
+                (dep.time mustEqual "00:00") and 
+                (dep.trainType mustEqual "S") and 
+                (dep.train mustEqual "S2") and
+                (dep.destinationLocation mustEqual "Pfäffikon SZ") and
+                (dep.stations.size mustEqual 3)
+        }
+    }
 }
