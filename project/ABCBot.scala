@@ -9,7 +9,7 @@ import Keys._
 object BuildSettings {
     val buildOrganization = "d2h.net"
     val buildVersion      = "1.0.0"
-    val buildScalaVersion = "2.9.0-1"
+    val buildScalaVersion = "2.9.1"
 
     val buildSettings = Defaults.defaultSettings ++ Seq (
         organization := buildOrganization,
@@ -28,7 +28,8 @@ object ShellPrompt {
         def buffer[T] (f: => T): T = f
     }
     def currBranch = (
-        ("git branch" lines_! devnull headOption)
+        ("git branch" lines_! devnull 
+         filter(_.startsWith("* ")) headOption)
         getOrElse "-" stripPrefix "* "
     )
 
@@ -61,15 +62,17 @@ object Dependencies {
     val liftMapper = "net.liftweb" %% "lift-mapper" % liftVersion % "compile->default"
     val liftWizard = "net.liftweb" %% "lift-wizard" % liftVersion % "compile->default"
 
-    val jetty6 = "org.mortbay.jetty" % "jetty" % "6.1.22" % "jetty,test"
-    val jetty7 = "org.eclipse.jetty" % "jetty-webapp" % "7.3.0.v20110203" % "container"
-    val javaxServlet = "javax.servlet" % "servlet-api" % "2.5" % "provided->default"
+    // val jetty6       = "org.mortbay.jetty" % "jetty"        % "6.1.22"          % "jetty,test"
+    val jetty7       = "org.eclipse.jetty" % "jetty-webapp" % "7.3.0.v20110203" % "container"
+    val javaxServlet = "javax.servlet"     % "servlet-api"  % "2.5"             % "provided->default"
 
     val dbH2 = "com.h2database" % "h2" % "1.2.138"
 
     val scalatest = "org.scalatest" % "scalatest_2.9.0" % "1.4.1" % "test"
 
-    
+    val specs2       = "org.specs2" %% "specs2"             % "1.6.1"
+    val specs2Scalaz = "org.specs2" %% "specs2-scalaz-core" % "6.0.1" % "test"
+    val pegdown      = "org.pegdown" % "pegdown" % "1.0.2"
 }
 
 object ABCBotBuild extends Build {
@@ -78,13 +81,22 @@ object ABCBotBuild extends Build {
     import BuildSettings._
     import com.github.siasia.WebPlugin.webSettings
 
-    val commonDeps = Seq(logbackCore, logbackClassic, jSoup, liftWebkit, liftMapper, jetty7, javaxServlet, dbH2, scalatest)
+    val commonDeps = Seq(logbackCore, logbackClassic, jSoup, liftWebkit, liftMapper, jetty7, javaxServlet, dbH2, specs2, specs2Scalaz, pegdown)
     
     lazy val abcBot = Project(
         "abcBot",
         file ("."),
         settings = buildSettings ++ webSettings ++ Seq(
-            libraryDependencies ++= commonDeps
+            // need ScalaToolsSnapshots resolver for specs2 stuff
+            resolvers += ScalaToolsSnapshots,
+            libraryDependencies ++= commonDeps,
+
+            // flag deprecated stuff
+            scalacOptions += "-deprecation",
+
+            // keep only specifications ending with Spec or Unit
+            testOptions := Seq(Tests.Filter(s => Seq("Spec", "Unit").exists(s.endsWith(_)))),
+            testOptions in Test += Tests.Argument("html", "console")
         )
     ) 
 }
