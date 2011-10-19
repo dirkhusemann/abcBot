@@ -43,8 +43,8 @@ package net.d2h.abcBot.bahn {
      *                            train
      * @param adStations List containing ViaStations
      */
-    abstract class ArrivalDeparture(val adTime: String, val adTrainType: String, val adTrain: String, 
-                                    val adSourceDestination: String, val adstations: List[ViaStation])
+    abstract class ArrivalDeparture(val time: String, val trainType: String, val train: String, 
+                                    val sourceDestination: String, val stations: List[ViaStation])
     
     /**
      * Arrival captures an arrival line listed in a station table.
@@ -58,8 +58,8 @@ package net.d2h.abcBot.bahn {
      *                       source location of the train
      * @param stations List containing ViaStations
      */
-    case class Arrival(time: String, trainType: String, train: String, sourceLocation: String, stations: List[ViaStation])
-         extends ArrivalDeparture(time, trainType, train, sourceLocation, stations)
+    case class Arrival(arrTime: String, arrTrainType: String, arrTrain: String, sourceLocation: String, arrStations: List[ViaStation])
+         extends ArrivalDeparture(arrTime, arrTrainType, arrTrain, sourceLocation, arrStations)
 
     /**
      * Departure captures a departure line listed in a station table.
@@ -73,8 +73,8 @@ package net.d2h.abcBot.bahn {
      *                            destination location of the train
      * @param stations List containing ViaStations
      */
-    case class Departure(time: String, trainType: String, train: String, destinationLocation: String, stations: List[ViaStation])
-         extends ArrivalDeparture(time, trainType, train, destinationLocation, stations)
+    case class Departure(depTime: String, depTrainType: String, depTrain: String, destinationLocation: String, depStations: List[ViaStation]) 
+         extends ArrivalDeparture(depTime, depTrainType, depTrain, destinationLocation, depStations)
 
 
     class StationTable(station: String, date: String) { 

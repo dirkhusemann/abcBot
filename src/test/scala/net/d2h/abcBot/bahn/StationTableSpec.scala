@@ -17,5 +17,7 @@
 
 import org.specs2._
 
-class StationTableSpec extends Specification {
+class StationTableSpec extends Specification { def is =
+
+    "This is a specification to check the StationTable class" ! pending
 }
