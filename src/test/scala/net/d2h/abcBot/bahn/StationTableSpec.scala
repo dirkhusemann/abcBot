@@ -30,6 +30,7 @@ package net.d2h.abcBot.bahn {
             "accept and provide an Arrival object for a certain time"         ! arrivalDepartureAdd().isFaithful ^
             "return a list of departure objects with the same departure time" ! multipleDeparturesSameTimes().returnsList ^
             "return a list of departure objects with the same departure time" ! multipleArrivalSameTimes().returnsList ^
+            "return a complete iterator of arrivals and departures"           ! stationTableIterator().iteratorComplete ^
                                                                               end
 
 
@@ -94,6 +95,19 @@ package net.d2h.abcBot.bahn {
                 (stationTable.arrivals(new LocalTime("00:00")) must contain(arr0000a, arr0000b)) and 
                 (stationTable.arrivals.size mustEqual 1) and 
                 (stationTable.arrivals(new LocalTime("00:00")).size mustEqual 2)
+            }
+        }
+
+        case class stationTableIterator() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
+            stationTable += arr0000a
+            stationTable += arr0000b
+            stationTable += dep0000a
+            stationTable += dep0000b
+
+            def iteratorComplete = { 
+                val cnx = stationTable.connections.toList
+                (cnx must contain(arr0000a, arr0000b, dep0000a, dep0000b)) and
+                (cnx.size mustEqual 4)
             }
         }
     }

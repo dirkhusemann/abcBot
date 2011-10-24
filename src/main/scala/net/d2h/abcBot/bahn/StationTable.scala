@@ -90,12 +90,12 @@ package net.d2h.abcBot.bahn {
          * Map containing LocalTime -> List[Arrival] mappings which
          * each list containing the arrivals for a given time.
          */
-        var arrivals: Map[LocalTime, List[Arrival]] = Map()
+        val arrivals: Map[LocalTime, List[Arrival]] = Map()
         /**
          * Map containing LocalTime -> List[Departure] mappings which
          * each list containing the departures for a given time.
          */
-        var departures: Map[LocalTime, List[Departure]] = Map()
+        val departures: Map[LocalTime, List[Departure]] = Map()
 
         /**
          * Add an Arrival to the StationTable.
@@ -115,6 +115,19 @@ package net.d2h.abcBot.bahn {
         def +=(departure: Departure): StationTable = { 
             departures(departure.time) = departure :: departures.getOrElse(departure.time, Nil)
             this
+        }
+
+        /**
+         * Retrieve an iterator over all arrivals and departures.
+         * @return Iterator[ArrivalDeparture]
+         */
+        def connections: Iterator[ArrivalDeparture] = { 
+            val cnx: Map[LocalTime, List[ArrivalDeparture]] = Map()
+
+            arrivals.keys foreach(arr => cnx(arr) = arrivals(arr) ::: cnx.getOrElse(arr, Nil))
+            departures.keys foreach(dep => cnx(dep) = departures(dep) ::: cnx.getOrElse(dep, Nil))
+
+            cnx.values.flatten.iterator
         }
     }
 
