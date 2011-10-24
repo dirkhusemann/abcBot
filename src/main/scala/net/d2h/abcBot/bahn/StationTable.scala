@@ -132,6 +132,11 @@ package net.d2h.abcBot.bahn {
     }
 
     object StationTable { 
-        
+        def apply(name: String, code: String, date: LocalDate): StationTable = { 
+            new StationTable(name, date)
+            // TODO: pull in all arrivals and departures converting
+            // each arrival and departure into an ArrivalDeparture
+            // object and adding it
+        }
     }
 }
