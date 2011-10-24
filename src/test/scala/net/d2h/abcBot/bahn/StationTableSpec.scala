@@ -23,30 +23,35 @@ package net.d2h.abcBot.bahn {
 
     class StationTableSpec extends Specification { def is =
 
-        "This is a specification to check the StationTable class"     ^
-                                                                      p^
-        "A StationTable should"                                       ^
-            "start out empty"                                         ! freshStationTable().isEmpty ^
-            "accept and provide an Arrival object for a certain time" ! arrivalAdd().isFaithful ^
-                                                                      end
+        "This is a specification to check the StationTable class"             ^
+                                                                              p^
+        "A StationTable should"                                               ^
+            "start out empty"                                                 ! freshStationTable().isEmpty ^
+            "accept and provide an Arrival object for a certain time"         ! arrivalDepartureAdd().isFaithful ^
+            "return a list of departure objects with the same departure time" ! multipleDeparturesSameTimes().returnsList ^
+                                                                              end
 
 
         trait ArrivalSamples { 
-            val arr0000 = Arrival(new LocalTime("00:00"), "S", "S2", "Pfäffikon (SZ)", 
-                                  ViaStation("Thalwil", new LocalTime("23:23")) :: 
-                                  ViaStation("Pfäffikon (SZ)", new LocalTime("23:28")) :: Nil)            
+            val arr0000a = Arrival(new LocalTime("00:00"), "S", "S2", "Pfäffikon (SZ)", 
+                                   ViaStation("Thalwil", new LocalTime("23:23")) :: 
+                                   ViaStation("Pfäffikon (SZ)", new LocalTime("23:28")) :: Nil)            
         }
                                                   
         trait DepartureSamples { 
-            val dep0000 = Departure(new LocalTime("00:00"), "S", "S2", "Pfäffikon SZ", 
-                                    ViaStation("Thalwil", new LocalTime("00:25")) :: 
-                                    ViaStation("Horgen", new LocalTime("00:28")) :: 
-                                    ViaStation("Wädenswil", new LocalTime("00:32")) :: Nil)            
+            val dep0000a = Departure(new LocalTime("00:00"), "S", "S2", "Pfäffikon SZ", 
+                                     ViaStation("Thalwil", new LocalTime("00:25")) :: 
+                                     ViaStation("Horgen", new LocalTime("00:28")) :: 
+                                     ViaStation("Wädenswil", new LocalTime("00:32")) :: Nil)
+            val dep0000b = Departure(new LocalTime("00:00"), "ICE", "ICE 123", "Hamburg", 
+                                     ViaStation("Stuttgart", new LocalTime("02:30")) :: 
+                                     ViaStation("Frankfurt", new LocalTime("04:28")) :: 
+                                     ViaStation("Hamburg", new LocalTime("08:32")) :: Nil)
         }
 
         trait CleanStationTable { 
             val stationTable = new StationTable("Zürich HB", new LocalDate("2011-10-24"))
-        }                             
+        }
                                                   
 
         case class freshStationTable() extends CleanStationTable { 
@@ -56,15 +61,23 @@ package net.d2h.abcBot.bahn {
             }
         }
 
-        case class arrivalAdd() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
-            stationTable += arr0000
-            stationTable += dep0000
+        case class arrivalDepartureAdd() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
+            stationTable += arr0000a
+            stationTable += dep0000a
             
             def isFaithful = { 
                 (stationTable.arrivals   must haveKey(new LocalTime("00:00"))) and
                 (stationTable.departures must haveKey(new LocalTime("00:00")))
             }
-                             
+        }
+                                                  
+        case class multipleDeparturesSameTimes() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
+            stationTable += dep0000a
+            stationTable += dep0000b
+
+            def returnsList = { 
+                stationTable.departures(new LocalTime("00:00")) must contain(dep0000a, dep0000b)
+            }
         }
     }
 }
