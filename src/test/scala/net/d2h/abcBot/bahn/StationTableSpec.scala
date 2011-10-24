@@ -15,9 +15,56 @@
 // You should have received a copy of the GNU General Public License
 // along with ABCBot.  If not, see <http://www.gnu.org/licenses/>.
 
-import org.specs2._
+package net.d2h.abcBot.bahn {
+    
+    import org.joda.time.{LocalDate, LocalTime}
 
-class StationTableSpec extends Specification { def is =
+    import org.specs2._
 
-    "This is a specification to check the StationTable class" ! pending
+    class StationTableSpec extends Specification { def is =
+
+        "This is a specification to check the StationTable class"     ^
+                                                                      p^
+        "A StationTable should"                                       ^
+            "start out empty"                                         ! freshStationTable().isEmpty ^
+            "accept and provide an Arrival object for a certain time" ! arrivalAdd().isFaithful ^
+                                                                      end
+
+
+        trait ArrivalSamples { 
+            val arr0000 = Arrival(new LocalTime("00:00"), "S", "S2", "Pfäffikon (SZ)", 
+                                  ViaStation("Thalwil", new LocalTime("23:23")) :: 
+                                  ViaStation("Pfäffikon (SZ)", new LocalTime("23:28")) :: Nil)            
+        }
+                                                  
+        trait DepartureSamples { 
+            val dep0000 = Departure(new LocalTime("00:00"), "S", "S2", "Pfäffikon SZ", 
+                                    ViaStation("Thalwil", new LocalTime("00:25")) :: 
+                                    ViaStation("Horgen", new LocalTime("00:28")) :: 
+                                    ViaStation("Wädenswil", new LocalTime("00:32")) :: Nil)            
+        }
+
+        trait CleanStationTable { 
+            val stationTable = new StationTable("Zürich HB", new LocalDate("2011-10-24"))
+        }                             
+                                                  
+
+        case class freshStationTable() extends CleanStationTable { 
+            def isEmpty = { 
+                (stationTable.arrivals.size mustEqual 0) and
+                (stationTable.departures.size mustEqual 0)
+            }
+        }
+
+        case class arrivalAdd() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
+            stationTable += arr0000
+            stationTable += dep0000
+            
+            def isFaithful = { 
+                (stationTable.arrivals   must haveKey(new LocalTime("00:00"))) and
+                (stationTable.departures must haveKey(new LocalTime("00:00")))
+            }
+                             
+        }
+    }
 }

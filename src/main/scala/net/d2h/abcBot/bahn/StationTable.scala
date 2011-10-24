@@ -19,7 +19,7 @@
 package net.d2h.abcBot.bahn { 
 
     import scala.collection.mutable.Map
-    import org.joda.time.{LocalTime, DateTime}
+    import org.joda.time.{LocalTime, LocalDate, DateTime}
 
     /**
      * ViaStation captures stations listed for a connection.
@@ -85,7 +85,7 @@ package net.d2h.abcBot.bahn {
      * @param date DateTime object containing the date for which to
      *             retrieve the station table
      */
-    class StationTable(station: String, date: DateTime) { 
+    class StationTable(station: String, date: LocalDate) { 
         /**
          * Map containing LocalTime -> List[Arrival] mappings which
          * each list containing the arrivals for a given time.
