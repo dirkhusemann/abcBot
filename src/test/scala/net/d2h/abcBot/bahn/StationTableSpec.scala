@@ -29,6 +29,7 @@ package net.d2h.abcBot.bahn {
             "start out empty"                                                 ! freshStationTable().isEmpty ^
             "accept and provide an Arrival object for a certain time"         ! arrivalDepartureAdd().isFaithful ^
             "return a list of departure objects with the same departure time" ! multipleDeparturesSameTimes().returnsList ^
+            "return a list of departure objects with the same departure time" ! multipleArrivalSameTimes().returnsList ^
                                                                               end
 
 
@@ -36,6 +37,9 @@ package net.d2h.abcBot.bahn {
             val arr0000a = Arrival(new LocalTime("00:00"), "S", "S2", "Pfäffikon (SZ)", 
                                    ViaStation("Thalwil", new LocalTime("23:23")) :: 
                                    ViaStation("Pfäffikon (SZ)", new LocalTime("23:28")) :: Nil)            
+            val arr0000b = Arrival(new LocalTime("00:00"), "TGV", "TGV 26", "Paris Gare du Lyon", 
+                                   ViaStation("Basel", new LocalTime("22:57")) :: 
+                                   ViaStation("Paris Gare du Lyon", new LocalTime("20:03")) :: Nil)            
         }
                                                   
         trait DepartureSamples { 
@@ -71,12 +75,21 @@ package net.d2h.abcBot.bahn {
             }
         }
                                                   
-        case class multipleDeparturesSameTimes() extends CleanStationTable with ArrivalSamples with DepartureSamples { 
+        case class multipleDeparturesSameTimes() extends CleanStationTable with DepartureSamples { 
             stationTable += dep0000a
             stationTable += dep0000b
 
             def returnsList = { 
                 stationTable.departures(new LocalTime("00:00")) must contain(dep0000a, dep0000b)
+            }
+        }
+
+        case class multipleArrivalSameTimes() extends CleanStationTable with ArrivalSamples { 
+            stationTable += arr0000a
+            stationTable += arr0000b
+
+            def returnsList = { 
+                stationTable.arrivals(new LocalTime("00:00")) must contain(arr0000a, arr0000b)
             }
         }
     }
