@@ -80,7 +80,9 @@ package net.d2h.abcBot.bahn {
             stationTable += dep0000b
 
             def returnsList = { 
-                stationTable.departures(new LocalTime("00:00")) must contain(dep0000a, dep0000b)
+                (stationTable.departures(new LocalTime("00:00")) must contain(dep0000a, dep0000b)) and
+                (stationTable.departures.size mustEqual 1)
+                (stationTable.departures(new LocalTime("00:00")).size mustEqual 2)
             }
         }
 
@@ -89,7 +91,9 @@ package net.d2h.abcBot.bahn {
             stationTable += arr0000b
 
             def returnsList = { 
-                stationTable.arrivals(new LocalTime("00:00")) must contain(arr0000a, arr0000b)
+                (stationTable.arrivals(new LocalTime("00:00")) must contain(arr0000a, arr0000b)) and 
+                (stationTable.arrivals.size mustEqual 1) and 
+                (stationTable.arrivals(new LocalTime("00:00")).size mustEqual 2)
             }
         }
     }
