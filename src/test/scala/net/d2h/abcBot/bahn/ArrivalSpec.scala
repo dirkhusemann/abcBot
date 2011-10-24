@@ -17,6 +17,8 @@
 
 package net.d2h.abcBot.bahn {
 
+    import org.joda.time.LocalTime
+
     import org.specs2._
 
     class ArrivalSpec extends Specification { def is = 
@@ -29,12 +31,12 @@ package net.d2h.abcBot.bahn {
 
 
         trait ArrivalSample { 
-            val arr = Arrival("00:00", "S", "S2", "Zürich", ViaStation("Thalwil", "23:23") :: ViaStation("Horgen", "23:28") :: Nil)            
+            val arr = Arrival(new LocalTime("00:00"), "S", "S2", "Zürich", ViaStation("Thalwil", new LocalTime("23:23")) :: ViaStation("Horgen", new LocalTime("23:28")) :: Nil)            
         }
 
         case class arrival() extends ArrivalSample { 
             def isCaptured =
-                (arr.time mustEqual "00:00") and 
+                (arr.time mustEqual new LocalTime("00:00")) and 
                 (arr.trainType mustEqual "S") and 
                 (arr.train mustEqual "S2") and
                 (arr.sourceLocation mustEqual "Zürich") and
@@ -52,13 +54,13 @@ package net.d2h.abcBot.bahn {
 
 
         trait DepartureSample { 
-            val dep = Departure("00:00", "S", "S2", "Pfäffikon SZ", ViaStation("Thalwil", "00:25") :: ViaStation("Horgen", "00:28") :: 
-                                ViaStation("Wädenswil", "00:32") :: Nil)            
+            val dep = Departure(new LocalTime("00:00"), "S", "S2", "Pfäffikon SZ", ViaStation("Thalwil", new LocalTime("00:25")) :: ViaStation("Horgen", new LocalTime("00:28")) :: 
+                                ViaStation("Wädenswil", new LocalTime("00:32")) :: Nil)            
         }
 
         case class departure() extends DepartureSample { 
             def isCaptured =
-                (dep.time mustEqual "00:00") and 
+                (dep.time mustEqual new LocalTime("00:00")) and 
                 (dep.trainType mustEqual "S") and 
                 (dep.train mustEqual "S2") and
                 (dep.destinationLocation mustEqual "Pfäffikon SZ") and
