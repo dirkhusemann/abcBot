@@ -26,7 +26,8 @@ package net.d2h.abcBot.bahn {
     import org.joda.time.{LocalTime, LocalDate, DateTime}
     import org.joda.time.format.DateTimeFormat
 
-    import org.jsoup.Jsoup
+    import org.jsoup.{Connection => JsoupConnection, Jsoup}
+    import org.jsoup.nodes.Document
 
     /**
      * ViaStation captures stations listed for a connection.
@@ -107,22 +108,30 @@ package net.d2h.abcBot.bahn {
         /**
          * Add an Arrival to the StationTable.
          * @param arrival Arrival object to add
-         * @return reference to self for chaining
          */
-        def +=(arrival: Arrival): StationTable = { 
+        def +=(arrival: Arrival): Unit = 
             arrivals(arrival.time) = arrival :: arrivals.getOrElse(arrival.time, Nil) 
-            this
-        }
+
+        /**
+         * Add a List[Arrival] to the StationTable.
+         * @param arrival List[Arrival] to add
+         */
+        def addArrivals(arrivals: List[Arrival]): Unit =
+            arrivals.foreach(this += _)
 
         /**
          * Add a Departure to the StationTable.
          * @param departure Departure object to add
-         * @return reference to self for chaining
          */
-        def +=(departure: Departure): StationTable = { 
+        def +=(departure: Departure): Unit = 
             departures(departure.time) = departure :: departures.getOrElse(departure.time, Nil)
-            this
-        }
+
+        /**
+         * Add a List[Departure] to the StationTable.
+         * @param departures List[Departure] to add
+         */
+        def addDepartures(departures: List[Departure]): Unit =
+            departures.foreach(this += _)
 
         /**
          * Retrieve an iterator over all arrivals and departures.
@@ -144,56 +153,64 @@ package net.d2h.abcBot.bahn {
         val reStation = """(.+)\s(\d+:\d+)""".r
         val reTrain = """(\S+)\s+(\d+)""".r
 
+        def stationTableChunk(name: String, code: String, date: LocalDate, hour: Int, mode: String): Document = { 
+            val cnx = Jsoup.connect("https://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=9667&protocol=https:&rt=1&")
+            val map = Map[String, String]("GUIREQProduct_0" -> "on",
+                                          "GUIREQProduct_1" -> "on",
+                                          "GUIREQProduct_2" -> "on",
+                                          "GUIREQProduct_3" -> "on",
+                                          "GUIREQProduct_4" -> "on",
+                                          "GUIREQProduct_5" -> "on",
+                                          "GUIREQProduct_6" -> "on",
+                                          "GUIREQProduct_7" -> "on",
+                                          "GUIREQProduct_8" -> "on",
+
+                                          "REQ0JourneyStopsSID" -> "",    
+                                          "REQTrain_name" -> "",
+                                          "advancedProductMode" -> "",
+
+                                          "boardType" -> mode,
+                                          "date" -> dateFormat.print(date),
+                                          "input" -> name,
+                                          "inputRef" -> code,
+                                          "start" -> "Suchen",
+                                          "time" -> "%02d:00".format(hour))
+            val post = cnx.data(map)
+            post.post()
+        }
+
+        case class Connection(time: LocalTime, train: String, typ: String, location: String, stations: List[ViaStation])
+
+        def connections(document: Document): List[Connection] =
+            (for (t <- document.select("td.time") if t.text != "früher" && t.text != "später") yield { 
+                val c = t.parent
+                val time = new LocalTime(c.select("td.time").text)
+                val train = c.select("td.train > a").text
+                val (typ, number) = tryo {
+                    train match { 
+                        case reTrain(tp, nmbr) => (tp, nmbr)
+                    }
+                } getOrElse (train, "")
+                val location = c.select("td.route > span").text
+                val stations = c.select("td.route").text.stripPrefix(location).trim.split(" - ").map(via => via match { 
+                    case reStation(s, t) => ViaStation(s, new LocalTime(t))
+                }).toList
+                
+                Connection(time, train, typ, location, stations)
+            }).toList
+
+        def arrivalConnections(document: Document): List[Arrival] =
+            connections(document).map(c => Arrival(c.time, c.typ, c.train, c.location, c.stations))
+
+        def departureConnections(document: Document): List[Departure] =
+            connections(document).map(c => Departure(c.time, c.typ, c.train, c.location, c.stations))
+
         def apply(name: String, code: String, date: LocalDate): StationTable = { 
             val st = new StationTable(name, date)
-
-            val cnx = Jsoup.connect("https://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=9667&protocol=https:&rt=1&")
-
-            for {mode <- "arr" :: "dep" :: Nil
-                 hour <- 0 to 24} { 
-                     val map = Map[String, String]("GUIREQProduct_0" -> "on",
-                                                   "GUIREQProduct_1" -> "on",
-                                                   "GUIREQProduct_2" -> "on",
-                                                   "GUIREQProduct_3" -> "on",
-                                                   "GUIREQProduct_4" -> "on",
-                                                   "GUIREQProduct_5" -> "on",
-                                                   "GUIREQProduct_6" -> "on",
-                                                   "GUIREQProduct_7" -> "on",
-                                                   "GUIREQProduct_8" -> "on",
-
-                                                   "REQ0JourneyStopsSID" -> "",    
-                                                   "REQTrain_name" -> "",
-                                                   "advancedProductMode" -> "",
-
-                                                   "boardType" -> mode,
-                                                   "date" -> dateFormat.print(date),
-                                                   "input" -> name,
-                                                   "inputRef" -> code,
-                                                   "start" -> "Suchen",
-                                                   "time" -> "%02d:00".format(hour))
-                     val post = cnx.data(map)
-                     val table = post.post()
-
-                     for (t <- table.select("td.time") if t.text != "früher" && t.text != "später") { 
-                         val c = t.parent
-                         val time = new LocalTime(c.select("td.time").text)
-                         val train = c.select("td.train > a").text
-                         val (typ, number) = tryo {
-                              train match { 
-                                 case reTrain(tp, nmbr) => (tp, nmbr)
-                             }
-                         } getOrElse (train, "")
-                         val location = c.select("td.route > span").text
-                         val stations = c.select("td.route").text.stripPrefix(location).trim.split(" - ").map(via => via match { 
-                             case reStation(s, t) => ViaStation(s, new LocalTime(t))
-                         }).toList
-
-                         mode match { 
-                             case "arr" => st += Arrival(time, typ, train, location, stations)
-                             case "dep" => st += Departure(time, typ, train, location, stations)
-                         }
-                     }
-                 }
+            for (hour <- 0 to 24) { 
+                st.addArrivals(arrivalConnections(stationTableChunk(name, code, date, hour, "arr")))
+                st.addDepartures(departureConnections(stationTableChunk(name, code, date, hour, "dep")))
+            }
             st
         }
     }
