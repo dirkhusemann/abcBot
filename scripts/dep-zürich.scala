@@ -30,4 +30,5 @@ for (t <- table.select("td.time") if t.text != "früher" && t.text != "später")
     val location = c.select("td.route > span").text
     val stations = c.select("td.route").text.stripPrefix(location).trim.split(" - ")
     println("%s - %s - %s" format(time, train, location))
+    println("stations %s" format(stations.mkString("|")))
 }

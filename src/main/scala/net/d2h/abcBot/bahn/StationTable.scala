@@ -21,7 +21,10 @@ package net.d2h.abcBot.bahn {
     import scala.collection.JavaConversions._
     import scala.collection.mutable.Map
 
+    import net.liftweb.util.Helpers.tryo
+
     import org.joda.time.{LocalTime, LocalDate, DateTime}
+    import org.joda.time.format.DateTimeFormat
 
     import org.jsoup.Jsoup
 
@@ -131,11 +134,16 @@ package net.d2h.abcBot.bahn {
             arrivals.keys foreach(arr => cnx(arr) = arrivals(arr) ::: cnx.getOrElse(arr, Nil))
             departures.keys foreach(dep => cnx(dep) = departures(dep) ::: cnx.getOrElse(dep, Nil))
 
-            cnx.values.flatten.iterator
+            cnx.keys.toList.sortWith(_.compareTo(_) < 0).map(cnx(_)).flatten.iterator
         }
     }
 
     object StationTable { 
+
+        val dateFormat = DateTimeFormat.forPattern("dd.MM.yyyy")
+        val reStation = """(.+)\s(\d+:\d+)""".r
+        val reTrain = """(\S+)\s+(\d+)""".r
+
         def apply(name: String, code: String, date: LocalDate): StationTable = { 
             val st = new StationTable(name, date)
 
@@ -158,15 +166,34 @@ package net.d2h.abcBot.bahn {
                                                    "advancedProductMode" -> "",
 
                                                    "boardType" -> mode,
-                                                   "date" -> "Do, 13.10.11",
+                                                   "date" -> dateFormat.print(date),
                                                    "input" -> name,
                                                    "inputRef" -> code,
                                                    "start" -> "Suchen",
                                                    "time" -> "%02d:00".format(hour))
                      val post = cnx.data(map)
                      val table = post.post()
-                 }
 
+                     for (t <- table.select("td.time") if t.text != "früher" && t.text != "später") { 
+                         val c = t.parent
+                         val time = new LocalTime(c.select("td.time").text)
+                         val train = c.select("td.train > a").text
+                         val (typ, number) = tryo {
+                              train match { 
+                                 case reTrain(tp, nmbr) => (tp, nmbr)
+                             }
+                         } getOrElse (train, "")
+                         val location = c.select("td.route > span").text
+                         val stations = c.select("td.route").text.stripPrefix(location).trim.split(" - ").map(via => via match { 
+                             case reStation(s, t) => ViaStation(s, new LocalTime(t))
+                         }).toList
+
+                         mode match { 
+                             case "arr" => st += Arrival(time, typ, train, location, stations)
+                             case "dep" => st += Departure(time, typ, train, location, stations)
+                         }
+                     }
+                 }
             st
         }
     }
