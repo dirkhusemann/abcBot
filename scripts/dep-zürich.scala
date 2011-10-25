@@ -14,12 +14,12 @@ val map = Map[String, String]("GUIREQProduct_0" -> "on",
                               "REQ0JourneyStopsSID" -> "",    
                               "REQTrain_name" -> "",
                               "advancedProductMode" -> "",
-                              "boardType" -> "arr",
-                              "date" -> "13.10.2011",
+                              "boardType" -> "dep",
+                              "date" -> "26.10.2011",
                               "input" -> "Zürich HB",
                               "inputRef" -> "Zürich HB#008503000",
                               "start" -> "Suchen",
-                              "time" -> "00:00")
+                              "time" -> "18:00")
 val post = cnx.data(map)
 val table = post.post()
 
