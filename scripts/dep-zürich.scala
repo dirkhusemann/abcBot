@@ -15,7 +15,7 @@ val map = Map[String, String]("GUIREQProduct_0" -> "on",
                               "REQTrain_name" -> "",
                               "advancedProductMode" -> "",
                               "boardType" -> "arr",
-                              "date" -> "Do, 13.10.11",
+                              "date" -> "13.10.2011",
                               "input" -> "Zürich HB",
                               "inputRef" -> "Zürich HB#008503000",
                               "start" -> "Suchen",
@@ -29,5 +29,5 @@ for (t <- table.select("td.time") if t.text != "früher" && t.text != "später")
     val train = c.select("td.train > a").text
     val location = c.select("td.route > span").text
     val stations = c.select("td.route").text.stripPrefix(location).trim.split(" - ")
-    println("%s - %s - %s" format(time, tr, location))
+    println("%s - %s - %s" format(time, train, location))
 }

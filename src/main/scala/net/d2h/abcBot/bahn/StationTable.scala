@@ -18,8 +18,12 @@
 
 package net.d2h.abcBot.bahn { 
 
+    import scala.collection.JavaConversions._
     import scala.collection.mutable.Map
+
     import org.joda.time.{LocalTime, LocalDate, DateTime}
+
+    import org.jsoup.Jsoup
 
     /**
      * ViaStation captures stations listed for a connection.
@@ -133,10 +137,37 @@ package net.d2h.abcBot.bahn {
 
     object StationTable { 
         def apply(name: String, code: String, date: LocalDate): StationTable = { 
-            new StationTable(name, date)
-            // TODO: pull in all arrivals and departures converting
-            // each arrival and departure into an ArrivalDeparture
-            // object and adding it
+            val st = new StationTable(name, date)
+
+            val cnx = Jsoup.connect("https://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=9667&protocol=https:&rt=1&")
+
+            for {mode <- "arr" :: "dep" :: Nil
+                 hour <- 0 to 24} { 
+                     val map = Map[String, String]("GUIREQProduct_0" -> "on",
+                                                   "GUIREQProduct_1" -> "on",
+                                                   "GUIREQProduct_2" -> "on",
+                                                   "GUIREQProduct_3" -> "on",
+                                                   "GUIREQProduct_4" -> "on",
+                                                   "GUIREQProduct_5" -> "on",
+                                                   "GUIREQProduct_6" -> "on",
+                                                   "GUIREQProduct_7" -> "on",
+                                                   "GUIREQProduct_8" -> "on",
+
+                                                   "REQ0JourneyStopsSID" -> "",    
+                                                   "REQTrain_name" -> "",
+                                                   "advancedProductMode" -> "",
+
+                                                   "boardType" -> mode,
+                                                   "date" -> "Do, 13.10.11",
+                                                   "input" -> name,
+                                                   "inputRef" -> code,
+                                                   "start" -> "Suchen",
+                                                   "time" -> "%02d:00".format(hour))
+                     val post = cnx.data(map)
+                     val table = post.post()
+                 }
+
+            st
         }
     }
 }
